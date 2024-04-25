@@ -308,7 +308,6 @@ const SlideButton = ({
         thumbTitle={thumbTitle}
         gestureHandler={animatedGestureHandler}
         translateX={dragX}
-        icon={icon}
         borderRadius={radius}
         height={childHeight}
         padding={padding}
