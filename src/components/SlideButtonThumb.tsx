@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleProp, StyleSheet, ViewStyle} from 'react-native';
+import {StyleProp, StyleSheet, ViewStyle,Text} from 'react-native';
 import {
   GestureEvent,
   PanGestureHandler,
@@ -28,6 +28,7 @@ export interface SlideButtonThumbProps extends SlideButtonCommonProps {
   animStarted?: () => void;
   animEnded?: () => void;
   isRTL: boolean;
+  thumbTitle:String
 }
 
 const SlideButtonThumb = ({
@@ -46,7 +47,7 @@ const SlideButtonThumb = ({
   animationDuration,
   dynamicResetEnabled,
   dynamicResetDelaying,
-  
+  thumbTitle
 }: SlideButtonThumbProps) => {
 
   const opacityValue = useSharedValue(1);
@@ -124,11 +125,12 @@ const SlideButtonThumb = ({
           thumbDynamicStyle,
           thumbStyle,
         ]}>
-        <Animated.View
+          <Text style={styles.thumbContainer}>{thumbTitle}</Text>
+        {/* <Animated.View
           testID="IconContainer"
           style={[styles.iconContainer, iconContainerDynamicStyle]}>
           {icon}
-        </Animated.View>
+        </Animated.View> */}
       </Animated.View>
     </PanGestureHandler>
   );
@@ -155,4 +157,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  thumbTitleStyle:{
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize:17,
+    fontWeight:'500'
+ }
 });

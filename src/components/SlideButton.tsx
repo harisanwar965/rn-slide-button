@@ -342,6 +342,7 @@ SlideButton.defaultProps = {
   borderRadius: DEFAULT_BORDER_RADIUS,
   padding: DEFAULT_CONTAINER_PADDING,
   title: DEFAULT_TITLE,
+  thumbTitle: DEFAULT_TITLE,
   completeThreshold: DEFAULT_COMPLETE_THRESHOLD,
   disabled: false,
   reverseSlideEnabled: true,
