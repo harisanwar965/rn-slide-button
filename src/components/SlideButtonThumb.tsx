@@ -23,16 +23,15 @@ export interface SlideButtonThumbProps extends SlideButtonCommonProps {
   gestureHandler?:
     | ((event: GestureEvent<PanGestureHandlerEventPayload>) => void)
     | undefined;
-  icon?: React.ReactNode;
+ 
   thumbStyle?: StyleProp<ViewStyle>;
   animStarted?: () => void;
   animEnded?: () => void;
-  isRTL: boolean;
   thumbTitle:String
 }
 
 const SlideButtonThumb = ({
-  icon,
+  
   gestureHandler,
   translateX,
   height,
@@ -42,7 +41,7 @@ const SlideButtonThumb = ({
   thumbStyle,
   animStarted,
   animEnded,
-  isRTL,
+  
   animation,
   animationDuration,
   dynamicResetEnabled,
@@ -83,7 +82,6 @@ const SlideButtonThumb = ({
     };
   });
 
-  //const KEY = isRTL ? 'right' : 'left';
   const thumbDynamicStyle = {
     left: padding,
     width: height,
@@ -121,11 +119,7 @@ const SlideButtonThumb = ({
           thumbStyle,
         ]}>
           <Text style={styles.thumbContainer}>{thumbTitle}</Text>
-        {/* <Animated.View
-          testID="IconContainer"
-          style={[styles.iconContainer, iconContainerDynamicStyle]}>
-          {icon}
-        </Animated.View> */}
+       
       </Animated.View>
     </PanGestureHandler>
   );
