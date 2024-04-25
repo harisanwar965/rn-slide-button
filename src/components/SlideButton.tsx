@@ -32,7 +32,7 @@ const DEFAULT_ANIMATION_DURATION = 180;
 
 export type SlideButtonPropsExtends = Omit<
   SlideButtonCommonProps,
-  'translateX' | 'scrollDistance' | 'endReached' | 'isRTL'
+  'translateX' | 'scrollDistance' | 'endReached'
 > &
   Omit<
     SlideButtonThumbProps,
@@ -41,11 +41,10 @@ export type SlideButtonPropsExtends = Omit<
     | 'translateX'
     | 'scrollDistance'
     | 'endReached'
-    | 'isRTL'
   > &
   Omit<
     SlideButtonTextProps,
-    'translateX' | 'scrollDistance' | 'endReached' | 'isRTL'
+    'translateX' | 'scrollDistance' | 'endReached' 
   >;
 
 interface SlideButtonProps extends SlideButtonPropsExtends {
@@ -113,8 +112,7 @@ const SlideButton = ({
   const gestureDisabled = useSharedValue(disabled);
   const dragX = useSharedValue(0);
 
-  const isRTL = I18nManager.isRTL;
-  const rtlMultiplier = isRTL ? -1 : 1;
+ 
   const opacity = disabled ? 0.55 : 1;
 
   let borderWidth = 0;
@@ -137,8 +135,7 @@ const SlideButton = ({
   const radius = borderRadius! - padding!;
 
   const scrollDistance =
-    (dimensions.width - padding! * 2 - thumbWidth - borderWidth * 2) *
-    rtlMultiplier;
+    (dimensions.width - padding! * 2 - thumbWidth - borderWidth * 2) 
   const slideThreshold = scrollDistance * (completeThreshold! / 100);
 
   const onLayoutContainer = async (e: LayoutChangeEvent) => {
@@ -228,11 +225,9 @@ const SlideButton = ({
       }
 
       const translationX = context.startX + event.translationX;
-      if (isRTL) {
-        dragX.value = clamp(translationX, scrollDistance, 0);
-      } else {
+      
         dragX.value = clamp(translationX, 0, scrollDistance);
-      }
+      
     },
     onEnd: () => {
       // console.log(`onEnd: dragX : ${dragX.value}`);
@@ -242,21 +237,7 @@ const SlideButton = ({
 
       runOnJS(onSlideEnd!)();
 
-      if (isRTL) {
-        if (dragX.value > slideThreshold) {
-          if (dragX.value === 0) {
-            runOnJS(handleComplete)(false);
-            return;
-          }
-          moveTo(0, false);
-        } else {
-          if (dragX.value === scrollDistance) {
-            runOnJS(handleComplete)(true);
-            return;
-          }
-          moveTo(scrollDistance, true);
-        }
-      } else {
+      
         if (dragX.value < slideThreshold) {
           if (dragX.value === 0) {
             runOnJS(handleComplete)(false);
@@ -270,7 +251,7 @@ const SlideButton = ({
           }
           moveTo(scrollDistance, true);
         }
-      }
+      
     },
   });
 
@@ -314,7 +295,7 @@ const SlideButton = ({
         endReached={endReached}
         scrollDistance={scrollDistance}
         thumbStyle={thumbStyle}
-        isRTL={isRTL}
+        
         animation={animation}
         animationDuration={animationDuration}
         dynamicResetEnabled={dynamicResetEnabled}
