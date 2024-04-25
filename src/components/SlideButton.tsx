@@ -56,7 +56,6 @@ interface SlideButtonProps extends SlideButtonPropsExtends {
   onSlideEnd?: () => void;
   onReachedToStart?: () => void;
   onReachedToEnd?: () => void;
-  underlayStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   thumbStyle?: StyleProp<ViewStyle>;
   autoReset?: boolean;
@@ -94,7 +93,6 @@ const SlideButton = ({
   icon,
   thumbStyle,
   containerStyle,
-  underlayStyle,
   onReachedToStart,
   onReachedToEnd,
   onSlideEnd,
@@ -168,18 +166,10 @@ const SlideButton = ({
     };
   }, []);
 
-  const underlayAnimStyle = useAnimatedStyle(() => {
-    return {
-      width: thumbWidth - borderWidth * 2 + dragX.value * rtlMultiplier,
-    };
-  });
+  
 
   //let KEY = isRTL ? 'right' : 'left';
-  const underlayDynamicStyle = {
-    left: padding!,
-    height: childHeight - borderWidth * 2,
-    borderRadius: radius,
-  };
+  
 
   const handleComplete = (reached: boolean) => {
     // console.log(`handleComplete: ${reached}`);
@@ -308,7 +298,6 @@ const SlideButton = ({
         testID="Underlay"
         style={[
           styles.underlayContainer,
-          underlayStyle,
           underlayAnimStyle,
           underlayDynamicStyle,
         ]}

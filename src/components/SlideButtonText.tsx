@@ -30,16 +30,7 @@ const SlideButtonText = ({
   translateX,
   scrollDistance
 }: SlideButtonTextProps) => {
-  const textAnimStyle = useAnimatedStyle(() => {
-    return {
-      opacity: interpolate(
-        translateX.value,
-        [0, scrollDistance],
-        [0.99, 0],
-        Extrapolate.CLAMP,
-      ),
-    };
-  })
+ 
   return (
     <View
       testID="TitleContainer"
