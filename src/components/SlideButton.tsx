@@ -5,7 +5,6 @@ import {
   StyleSheet,
   View,
   ViewStyle,
-  I18nManager,
 } from 'react-native';
 import SlideButtonThumb, { SlideButtonThumbProps } from './SlideButtonThumb';
 import SlideButtonText, { SlideButtonTextProps } from './SlideButtonText';
@@ -24,7 +23,6 @@ const DEFAULT_COMPLETE_THRESHOLD = 70;
 const DEFAULT_CONTAINER_COLOR = '#0095FF';
 const DEFAULT_UNDERLAY_COLOR = '#42AAFF';
 const DEFAULT_TITLE = 'Slide to confirm';
-const THUMB_TITLE = 'OFFLINE';
 const DEFAULT_AUTO_RESET = false;
 const DEFAULT_AUTO_RESET_DELAY = 1080;
 const DEFAULT_ANIMATION = false;
@@ -90,7 +88,6 @@ const SlideButton = ({
   title,
   titleContainerStyle,
   titleStyle,
-  icon,
   thumbStyle,
   containerStyle,
   onReachedToStart,
