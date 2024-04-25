@@ -12,7 +12,6 @@ import SlideButtonText, { SlideButtonTextProps } from './SlideButtonText';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
-  useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';

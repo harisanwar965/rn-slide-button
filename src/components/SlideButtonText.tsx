@@ -6,7 +6,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import Animated, { Extrapolate, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { SlideButtonCommonProps } from './SlideButton';
 
@@ -26,9 +26,7 @@ const SlideButtonText = ({
   titleContainerStyle,
   height,
   borderRadius,
-  padding,
-  translateX,
-  scrollDistance
+  padding
 }: SlideButtonTextProps) => {
  
   return (
