@@ -304,7 +304,7 @@ const SlideButton = ({
         scrollDistance={scrollDistance}
       />
 
-      <Animated.View
+      {/* <Animated.View
         testID="Underlay"
         style={[
           styles.underlayContainer,
@@ -312,7 +312,7 @@ const SlideButton = ({
           underlayAnimStyle,
           underlayDynamicStyle,
         ]}
-      />
+      /> */}
 
       <SlideButtonThumb
         gestureHandler={animatedGestureHandler}

@@ -49,7 +49,9 @@ const SlideButtonText = ({
         testID="Title"
         numberOfLines={2}
         allowFontScaling={false}
-        style={[styles.title, titleStyle, textAnimStyle]}
+        style={[styles.title, titleStyle, 
+          // textAnimStyle
+        ]}
       >
         {title}
       </Animated.Text>
