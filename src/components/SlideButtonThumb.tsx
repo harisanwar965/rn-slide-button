@@ -91,12 +91,7 @@ const SlideButtonThumb = ({
     borderRadius,
   };
 
-  const iconContainerDynamicStyle = {
-    width: height,
-    height,
-    borderRadius,
-    transform: [{scaleX: isRTL ? -1 : 1}],
-  };
+ 
 
   React.useEffect(() => {
     if (endReached) {
