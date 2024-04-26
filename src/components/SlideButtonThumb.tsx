@@ -17,7 +17,6 @@ import Animated, {
 
 import {SlideButtonCommonProps} from './SlideButton';
 
-const DEFAULT_ICON_CONTAINER_COLOR = '#FFFFFF';
 
 export interface SlideButtonThumbProps extends SlideButtonCommonProps {
   gestureHandler?:
