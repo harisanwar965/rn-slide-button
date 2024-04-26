@@ -128,16 +128,12 @@ const SlideButtonThumb = ({
 export default React.memo(SlideButtonThumb);
 
 const styles = StyleSheet.create({
-  thumbContainer: {
+  thumbContainer:{
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DEFAULT_ICON_CONTAINER_COLOR,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    backgroundColor: 'rgba(0,0,0,0)',
+   },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
