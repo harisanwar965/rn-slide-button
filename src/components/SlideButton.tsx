@@ -106,7 +106,7 @@ const SlideButton = ({
 }: SlideButtonProps) => {
   const [dimensions, setDimensions] = React.useState({ width: 246.85714721679688, height: 0 });
   const [endReached, setEndReached] = React.useState<boolean>(false);
-  const callHandleFunction=React.useState<boolean>(callHandleComplete)
+  const [callHandleFunction,setCallHandleFunction]=React.useState<boolean>(callHandleComplete)
   const timeoutRef = React.useRef<NodeJS.Timeout | null>();
 
   const gestureDisabled = useSharedValue(disabled);
@@ -136,8 +136,8 @@ const SlideButton = ({
 console.log('\n\n\n dimensions::',dimensions)
   const scrollDistance =
     (dimensions.width - padding! * 2 - thumbWidth - borderWidth * 2) 
-  const slideThreshold = scrollDistance>0 ?scrollDistance  * (completeThreshold! / 100):
-  117.42857578822544 * (completeThreshold! / 100)
+  const slideThreshold = scrollDistance  * (completeThreshold! / 100)
+  // 117.42857578822544 * (completeThreshold! / 100)
   ;
 console.log('\n\n\n\n scrollDistance is::',scrollDistance)
   const onLayoutContainer = async (e: LayoutChangeEvent) => {
@@ -150,6 +150,7 @@ console.log('\n\n\n\n scrollDistance is::',scrollDistance)
   };
 useEffect(()=>{
 if(callHandleComplete){
+  setCallHandleFunction(callHandleComplete)
   handleComplete(true)
    moveTo(scrollDistance, true);
 }
@@ -369,3 +370,5 @@ const styles = StyleSheet.create({
     backgroundColor: DEFAULT_UNDERLAY_COLOR,
   },
 });
+
+
