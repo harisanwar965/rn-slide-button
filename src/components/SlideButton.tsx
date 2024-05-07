@@ -106,7 +106,7 @@ const SlideButton = ({
 }: SlideButtonProps) => {
   const [dimensions, setDimensions] = React.useState({ width: 246.85714721679688, height: 0 });
   const [endReached, setEndReached] = React.useState<boolean>(false);
-  const [callHandleFunction,setCallHandleFunction]=React.useState<boolean>(callHandleComplete)
+  const callHandleFunction=React.useState<boolean>(callHandleComplete)
   const timeoutRef = React.useRef<NodeJS.Timeout | null>();
 
   const gestureDisabled = useSharedValue(disabled);
