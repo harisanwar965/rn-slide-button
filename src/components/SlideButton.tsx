@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   LayoutChangeEvent,
   StyleProp,
@@ -57,6 +57,7 @@ interface SlideButtonProps extends SlideButtonPropsExtends {
   thumbStyle?: StyleProp<ViewStyle>;
   autoReset?: boolean;
   autoResetDelay?: number;
+  callHandleComplete?:boolean
 }
 
 type AnimatedGHContext = {
@@ -101,9 +102,11 @@ const SlideButton = ({
   animationDuration,
   dynamicResetEnabled,
   dynamicResetDelaying,
+  callHandleComplete=false
 }: SlideButtonProps) => {
-  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = React.useState({ width: 246.85714721679688, height: 0 });
   const [endReached, setEndReached] = React.useState<boolean>(false);
+  const [callHandleFunction,setCallHandleFunction]=React.useState<boolean>(callHandleComplete)
   const timeoutRef = React.useRef<NodeJS.Timeout | null>();
 
   const gestureDisabled = useSharedValue(disabled);
@@ -130,19 +133,27 @@ const SlideButton = ({
   }
 
   const radius = borderRadius! - padding!;
-
+console.log('\n\n\n dimensions::',dimensions)
   const scrollDistance =
     (dimensions.width - padding! * 2 - thumbWidth - borderWidth * 2) 
-  const slideThreshold = scrollDistance * (completeThreshold! / 100);
-
+  const slideThreshold = scrollDistance>0 ?scrollDistance  * (completeThreshold! / 100):
+  117.42857578822544 * (completeThreshold! / 100)
+  ;
+console.log('\n\n\n\n scrollDistance is::',scrollDistance)
   const onLayoutContainer = async (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     const { width: w, height: h } = dimensions;
+    // console.log('\n\n\n dimensions::',dimensions)
     if (w !== width || h !== height) {
       setDimensions({ width, height });
     }
   };
-
+useEffect(()=>{
+if(callHandleComplete){
+  handleComplete(true)
+   moveTo(scrollDistance, true);
+}
+},[callHandleFunction])
   React.useEffect(() => {
     gestureDisabled.value = disabled;
   }, [disabled]);
@@ -234,9 +245,9 @@ const SlideButton = ({
 
       runOnJS(onSlideEnd!)();
 
-      
-        if (dragX.value < slideThreshold) {
-          if (dragX.value === 0) {
+       if (dragX.value < slideThreshold) {
+
+          if (dragX.value <= 0) {
             runOnJS(handleComplete)(false);
             return;
           }
