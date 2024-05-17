@@ -1,301 +1,374 @@
-import React from 'react';
-import useService from './service';
-import useStyles from './styles';
+import React, { useEffect } from 'react';
 import {
-  FlatList,
-  Image,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+  LayoutChangeEvent,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
 } from 'react-native';
-import { Screen } from '@Templates';
-import { Colors, FontFamily } from 'Theme';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
-import {
-  responsiveHeight,
-  responsiveWidth
-} from 'react-native-responsive-dimensions';
-import SlideButton from 'rn-slide-button';
-import MapView, { Marker } from 'react-native-maps';
-import { SkypeIndicator } from 'react-native-indicators';
-import axios from 'axios';
-import Async from 'Store/Async';
-const Home = props => {
-  const navigation = useNavigation();
-  const {
-    online,
-    setOnline,
-    driverLocation,
-    setDriverLocation,
-    getCurrentLocation,
-    rideData,
-    locationData,
-    driverStatus,
-    loader,
-    setLoader,
-    updateDriverData,
-    loading,
-    driverLoading,
-    currDriverLoader,
-    currDriverData,
-    eventData,
-    driverOnline
-  } = useService(props);
-  const { headView, flatlistView, headText } = useStyles();
-  const renderItem = ({ item, index }) => {
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          props.navigation.navigate('RideDetails', { data: item });
-        }}>
-        <View style={flatlistView}>
-          <View style={{ flexDirection: 'row' }}>
-            <Icon
-              name={'map-marker-circle'}
-              color={Colors.white}
-              size={30}
-              style={{ alignSelf: 'center' }}></Icon>
-            <View
-              style={{
-                flexDirection: 'column',
-                marginLeft: responsiveWidth(2)
-              }}>
-              <Text style={headText}>{item?.name}</Text>
-              <Text style={[headText, { color: Colors.greyText }]}>
-                {item?.mile}
-              </Text>
-            </View>
-          </View>
-          <View
-            style={{
-              width: responsiveWidth(40),
-              flexDirection: 'row',
-              justifyContent: 'space-evenly'
-            }}>
-            <View style={{ flexDirection: 'column' }}>
-              <Icon
-                name={'clock'}
-                color={Colors.grey}
-                size={20}
-                style={{ alignSelf: 'center' }}></Icon>
-              <Text
-                style={[
-                  headText,
-                  { color: Colors.greyText, alignSelf: 'center' }
-                ]}>
-                {item?.time}
-              </Text>
-            </View>
+import SlideButtonThumb, { SlideButtonThumbProps } from './SlideButtonThumb';
+import SlideButtonText, { SlideButtonTextProps } from './SlideButtonText';
+import Animated, {
+  runOnJS,
+  useAnimatedGestureHandler,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import { PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 
-            <View style={{ flexDirection: 'column' }}>
-              <Text
-                style={[
-                  headText,
-                  {
-                    color: Colors.greyText,
-                    alignSelf: 'center',
-                    position: 'absolute',
-                    left: responsiveWidth(5),
-                    top: -12
-                  }
-                ]}>
-                {item?.min}
-              </Text>
+const DEFAULT_HEIGHT = 56;
+const DEFAULT_BORDER_RADIUS = DEFAULT_HEIGHT / 2;
+const DEFAULT_CONTAINER_PADDING = 5;
+const DEFAULT_COMPLETE_THRESHOLD = 70;
+const DEFAULT_CONTAINER_COLOR = '#0095FF';
+const DEFAULT_UNDERLAY_COLOR = '#42AAFF';
+const DEFAULT_TITLE = 'Slide to confirm';
+const DEFAULT_AUTO_RESET = false;
+const DEFAULT_AUTO_RESET_DELAY = 1080;
+const DEFAULT_ANIMATION = false;
+const DEFAULT_ANIMATION_DURATION = 180;
 
-              <Icon
-                name={'clock'}
-                color={Colors.grey}
-                size={20}
-                style={{ alignSelf: 'center' }}></Icon>
-              <Text
-                style={[
-                  headText,
-                  { color: Colors.greyText, alignSelf: 'center' }
-                ]}>
-                {item?.time1}
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'column' }}>
-              <Icon
-                name={'car'}
-                color={Colors.grey}
-                size={20}
-                style={{ alignSelf: 'center' }}></Icon>
-              <Text
-                style={[
-                  headText,
-                  { color: Colors.greyText, alignSelf: 'center' }
-                ]}>
-                {item?.cars}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
+export type SlideButtonPropsExtends = Omit<
+  SlideButtonCommonProps,
+  'translateX' | 'scrollDistance' | 'endReached'
+> &
+  Omit<
+    SlideButtonThumbProps,
+    | 'opacity'
+    | 'gestureHandler'
+    | 'translateX'
+    | 'scrollDistance'
+    | 'endReached'
+  > &
+  Omit<
+    SlideButtonTextProps,
+    'translateX' | 'scrollDistance' | 'endReached' 
+  >;
+
+interface SlideButtonProps extends SlideButtonPropsExtends {
+  width?: number;
+  disabled?: boolean;
+  completeThreshold?: number;
+  onSlideStart?: () => void;
+  onSlideEnd?: () => void;
+  onReachedToStart?: () => void;
+  onReachedToEnd?: () => void;
+  containerStyle?: StyleProp<ViewStyle>;
+  thumbStyle?: StyleProp<ViewStyle>;
+  autoReset?: boolean;
+  autoResetDelay?: number;
+  callHandleComplete?:boolean
+}
+
+type AnimatedGHContext = {
+  startX: number;
+};
+
+export type SlideButtonCommonProps = {
+  height?: number;
+  borderRadius?: number;
+  padding?: number;
+  translateX: Animated.SharedValue<number>;
+  endReached: boolean;
+  scrollDistance: number;
+  reverseSlideEnabled?: boolean;
+  animation?: boolean;
+  animationDuration?: number;
+  dynamicResetEnabled?: boolean;
+  dynamicResetDelaying?: boolean;
+};
+
+const SlideButton = ({
+  width,
+  height,
+  borderRadius,
+  completeThreshold,
+  disabled,
+  padding,
+  thumbTitle,
+  title,
+  titleContainerStyle,
+  titleStyle,
+  thumbStyle,
+  containerStyle,
+  onReachedToStart,
+  onReachedToEnd,
+  onSlideEnd,
+  onSlideStart,
+  reverseSlideEnabled,
+  autoReset,
+  autoResetDelay,
+  animation,
+  animationDuration,
+  dynamicResetEnabled,
+  dynamicResetDelaying,
+  callHandleComplete=false
+}: SlideButtonProps) => {
+  const [dimensions, setDimensions] = React.useState({ width: 0, height: 0 });
+  const [endReached, setEndReached] = React.useState<boolean>(false);
+  const [callHandleFunction,setCallHandleFunction]=React.useState<boolean>(callHandleComplete)
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>();
+
+  const gestureDisabled = useSharedValue(disabled);
+  const dragX = useSharedValue(0);
+
+ 
+  const opacity = disabled ? 0.55 : 1;
+
+  let borderWidth = 0;
+  let thumbWidth = height! - padding! * 2;
+  let childHeight = height! - padding! * 2;
+  if (thumbStyle !== undefined) {
+    let tWidth = StyleSheet.flatten(thumbStyle).width;
+    if (tWidth !== undefined) {
+      thumbWidth = Number(tWidth);
+    }
+  }
+
+  if (containerStyle !== undefined) {
+    let bWidth = StyleSheet.flatten(containerStyle).borderWidth;
+    if (bWidth !== undefined) {
+      borderWidth = Number(bWidth);
+    }
+  }
+
+  const radius = borderRadius! - padding!;
+console.log('\n\n\n dimensions::',dimensions)
+  const scrollDistance =
+    (dimensions.width - padding! * 2 - thumbWidth - borderWidth * 2) 
+  const slideThreshold = scrollDistance  * (completeThreshold! / 100)
+  // 117.42857578822544 * (completeThreshold! / 100)
+  ;
+console.log('\n\n\n\n scrollDistance is::',scrollDistance)
+  const onLayoutContainer = async (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    const { width: w, height: h } = dimensions;
+    // console.log('\n\n\n dimensions::',dimensions)
+    if (w !== width || h !== height) {
+      setDimensions({ width, height });
+    }
   };
-  const updateDriver = async flag => {
-    await Async.setItem(Async.Item.driverStatus, flag);
+useEffect(()=>{
+if(callHandleComplete){
+  setCallHandleFunction(callHandleComplete)
+  handleComplete(true)
+   moveTo(scrollDistance, true);
+}
+},[callHandleFunction,callHandleComplete,scrollDistance])
+  React.useEffect(() => {
+    gestureDisabled.value = disabled;
+  }, [disabled]);
+
+  React.useEffect(() => {
+    if (dynamicResetEnabled && !dynamicResetDelaying) {
+      reset();
+    }
+  }, [dynamicResetDelaying]);
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  
+
+  //let KEY = isRTL ? 'right' : 'left';
+  
+
+  const handleComplete = (reached: boolean) => {
+    // console.log(`handleComplete: ${reached}`);
+    if (reached) {
+      setEndReached(true);
+      onReachedToEnd && onReachedToEnd();
+      if (!dynamicResetEnabled) {
+        if (autoReset) {
+          gestureDisabled.value = true;
+          timeoutRef.current = setTimeout(() => {
+            reset();
+          }, autoResetDelay);
+        }
+      }
+      if (!reverseSlideEnabled) {
+        gestureDisabled.value = true;
+      }
+    } else {
+      setEndReached(false);
+      onReachedToStart && onReachedToStart();
+    }
   };
+
+  const clamp = (value: number, lowerBound: number, upperBound: number) => {
+    'worklet';
+    return Math.min(Math.max(lowerBound, value), upperBound);
+  };
+
+  const reset = () => {
+    'worklet';
+    dragX.value = withSpring(0, { damping: 20, stiffness: 100 }, () => {
+      runOnJS(handleComplete)(false);
+    });
+    gestureDisabled.value = false;
+  };
+
+  const moveTo = (value: number, complete: boolean) => {
+    'worklet';
+    dragX.value = withSpring(value, { damping: 20, stiffness: 100 }, () => {
+      runOnJS(handleComplete)(complete);
+    });
+  };
+
+  const animatedGestureHandler = useAnimatedGestureHandler<
+    PanGestureHandlerGestureEvent,
+    AnimatedGHContext
+  >({
+    onStart: (_, context) => {
+      context.startX = dragX.value;
+      runOnJS(onSlideStart!)();
+    },
+    onActive: (event, context) => {
+      if (gestureDisabled.value) {
+        return;
+      }
+
+      const translationX = context.startX + event.translationX;
+      
+        dragX.value = clamp(translationX, 0, scrollDistance);
+      
+    },
+    onEnd: () => {
+      // console.log(`onEnd: dragX : ${dragX.value}`);
+      if (gestureDisabled.value) {
+        return;
+      }
+
+      runOnJS(onSlideEnd!)();
+
+       if (dragX.value < slideThreshold) {
+
+          if (dragX.value <= 0) {
+            runOnJS(handleComplete)(false);
+            return;
+          }
+          moveTo(0, false);
+        } else {
+          if (dragX.value === scrollDistance) {
+            runOnJS(handleComplete)(true);
+            return;
+          }
+          moveTo(scrollDistance, true);
+        }
+      
+    },
+  });
+
   return (
-    <Screen>
-      <View style={headView}>
-        <Icon
-          onPress={() => {
-            props.navigation.openDrawer();
-          }}
-          name={'home'}
-          color={Colors.white}
-          size={30}
-          style={{ alignSelf: 'center' }}></Icon>
-        <SlideButton
-          callHandleComplete={driverOnline}
-          title={online === true ? 'Position \n Base       ' : null}
-          thumbTitle={online === true ? 'Online' : 'Offline'}
-          // animation={true}
-          onReachedToEnd={() => {
-            console.log('\n\n end');
-            setOnline(true);
-            updateDriver(true);
-            // updateDriverData(true);
-            // driverStatus(true);
-          }}
-          value={true}
-          onReachedToStart={() => {
-            console.log('\n\n Start');
-            setOnline(false);
-            updateDriver(false);
+    <View
+      style={[
+        styles.container,
+        { opacity },
+        containerStyle,
+        { height, borderRadius, ...(width ? { width } : {}) },
+      ]}
+      onLayout={onLayoutContainer}
+    >
+      <SlideButtonText
+        title={title}
+        titleStyle={titleStyle}
+        titleContainerStyle={titleContainerStyle}
+        height={childHeight}
+        padding={padding}
+        borderRadius={radius}
+        translateX={dragX}
+        scrollDistance={scrollDistance}
+      />
 
-            // updateDriverData(false);
+      {/* <Animated.View
+        testID="Underlay"
+        style={[
+          styles.underlayContainer,
+          underlayAnimStyle,
+          underlayDynamicStyle,
+        ]}
+      /> */}
 
-            // driverStatus(false);
-          }}
-          height={52}
-          titleStyle={{
-            alignSelf: 'flex-start',
-            marginLeft: responsiveWidth(4)
-          }}
-          thumbStyle={{
-            backgroundColor: online === true ? Colors.online : Colors.offline,
-            width: responsiveWidth(30),
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}
-          borderRadius={50}
-          padding={2}
-          // default={true}
-          containerStyle={{
-            backgroundColor: Colors.transparent,
-            width: responsiveWidth(60),
-            borderColor: online === true ? Colors.online : Colors.offline,
-            borderWidth: 1,
-            marginLeft: responsiveWidth(5)
-          }}
-        />
-        <Icon
-          name={'email-outline'}
-          color={Colors.white}
-          size={30}
-          style={{
-            alignSelf: 'center',
-            marginLeft: responsiveWidth(2)
-          }}></Icon>
-        <Icon
-          name={'chevron-double-left'}
-          color={Colors.white}
-          size={30}
-          style={{
-            alignSelf: 'center',
-            marginLeft: responsiveWidth(2)
-          }}></Icon>
-      </View>
-      {/* {online === false ? ( */}
-      <View style={{ overflow: 'hidden' }}>
-        <MapView
-          style={{
-            marginTop: 10,
-            height:
-              Platform.OS === 'ios'
-                ? responsiveHeight(80)
-                : responsiveHeight(80),
-            width: responsiveWidth(100),
-            justifyContent: 'center',
-            alignSelf: 'center',
-            alignItems: 'center'
-          }}
-          region={{
-            latitude:
-              Object.keys(locationData).length == 0
-                ? 51.277249842314774
-                : parseFloat(locationData?.latitude), //33.59839,
-            longitude:
-              Object.keys(locationData).length == 0
-                ? 1.083897322734104
-                : parseFloat(locationData?.longitude), //73.04414,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005
-          }}
-          showsUserLocation={true}
-          showsPointsOfInterest={true}
-          showsMyLocationButton={true}
-          showsCompass={true}
-          showsTraffic={true}
-          showsScale={true}
-          loadingEnabled={false}
-          scrollDuringRotateOrZoomEnabled={true}>
-          {/* <Marker
-            onPress={() => {
-              getCurrentLocation(
-                driverLocation.latitude,
-                driverLocation.longitude
-              );
-            }}
-            coordinate={{
-              latitude:
-                Object.keys(locationData).length == 0
-                  ? 51.277249842314774
-                  : parseFloat(locationData?.latitude), //33.59839,
-              longitude:
-                Object.keys(locationData).length == 0
-                  ? 1.083897322734104
-                  : parseFloat(locationData?.longitude) //73.04414
-            }}></Marker> */}
-        </MapView>
-      </View>
-      {/* // ) : (
-      //   <View>
-      //     <FlatList data={rideData} renderItem={renderItem}></FlatList>
-      //   </View>
-      // )} */}
-      <View
-        style={{
-          position: 'absolute',
-          left: responsiveWidth(45),
-
-          top: responsiveHeight(70)
-        }}>
-        {/* {driverLoading && (
-          <SkypeIndicator
-            color={Colors.online}
-            size={60}
-            style={{ position: 'absolute', top: responsiveHeight(-20) }}
-          />
-        )} */}
-        {currDriverLoader || loading || driverLoading ? (
-          <SkypeIndicator
-            color={Colors.online}
-            size={60}
-            style={{ position: 'absolute', top: responsiveHeight(-20) }}
-          />
-        ) : null}
-
-        {/* {loading && <SkypeIndicator color={Colors.iconBgc} />} */}
-      </View>
-    </Screen>
+      <SlideButtonThumb
+        thumbTitle={thumbTitle}
+        gestureHandler={animatedGestureHandler}
+        translateX={dragX}
+        borderRadius={radius}
+        height={childHeight}
+        padding={padding}
+        endReached={endReached}
+        scrollDistance={scrollDistance}
+        thumbStyle={thumbStyle}
+        
+        animation={animation}
+        animationDuration={animationDuration}
+        dynamicResetEnabled={dynamicResetEnabled}
+        dynamicResetDelaying={dynamicResetDelaying}
+        animStarted={() => {
+          if (reverseSlideEnabled) {
+            gestureDisabled.value = true;
+          }
+        }}
+        animEnded={() => {
+          if (reverseSlideEnabled) {
+            gestureDisabled.value = false;
+          }
+        }}
+      />
+    </View>
   );
 };
 
-export default Home;
+export default React.memo(SlideButton);
+
+SlideButton.defaultProps = {
+  height: DEFAULT_HEIGHT,
+  borderRadius: DEFAULT_BORDER_RADIUS,
+  padding: DEFAULT_CONTAINER_PADDING,
+  title: DEFAULT_TITLE,
+  thumbTitle: DEFAULT_TITLE,
+  completeThreshold: DEFAULT_COMPLETE_THRESHOLD,
+  disabled: false,
+  reverseSlideEnabled: true,
+  autoReset: DEFAULT_AUTO_RESET,
+  autoResetDelay: DEFAULT_AUTO_RESET_DELAY,
+  animation: DEFAULT_ANIMATION,
+  animationDuration: DEFAULT_ANIMATION_DURATION,
+  dynamicResetEnabled: false,
+  dynamicResetDelaying: false,
+  onSlideStart: () => {},
+  onSlideEnd: () => {},
+  onReachedToStart: () => {},
+  onReachedToEnd: () => {},
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: DEFAULT_CONTAINER_COLOR,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    marginVertical: 10,
+    height: DEFAULT_HEIGHT,
+    borderRadius: DEFAULT_BORDER_RADIUS,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  underlayContainer: {
+    position: 'absolute',
+    backgroundColor: DEFAULT_UNDERLAY_COLOR,
+  },
+});
+
+
